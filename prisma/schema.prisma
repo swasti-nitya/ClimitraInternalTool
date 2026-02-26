@@ -1,0 +1,60 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id    String   @id @default(cuid())
+  name  String
+  email String   @unique
+  role  String   // "User" or "Super Admin"
+  createdAt DateTime @default(now())
+  
+  expenses      Expense[]
+  leaves        Leave[]
+}
+
+model Expense {
+  id            String   @id @default(cuid())
+  date          DateTime
+  amount        Float
+  paidTo        String
+  category      String   // Food, Travel, Equipment, Misc
+  description   String
+  paymentProof  String?  // File path
+  invoice       String?  // File path
+  remarks       String?
+  status        String   @default("Pending approval") // Pending approval, approval done, paid
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  
+  userId        String
+  user          User     @relation(fields: [userId], references: [id])
+}
+
+model Leave {
+  id            String   @id @default(cuid())
+  date          DateTime
+  type          String   // "Leave", "WFH" (Work From Home)
+  reason        String?
+  status        String   @default("Pending") // Pending, Approved, Rejected
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  
+  userId        String
+  user          User     @relation(fields: [userId], references: [id])
+}
+
+model Holiday {
+  id        String   @id @default(cuid())
+  date      DateTime @unique
+  name      String   // Holiday name (e.g., "Independence Day")
+  createdAt DateTime @default(now())
+}
