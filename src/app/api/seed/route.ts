@@ -24,38 +24,43 @@ export async function GET() {
       id TEXT PRIMARY KEY,
       name TEXT NOT NULL,
       email TEXT NOT NULL UNIQUE,
-      role TEXT NOT NULL
+      role TEXT NOT NULL,
+      createdAt TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
     )`
     
     await prisma.$executeRaw`CREATE TABLE IF NOT EXISTS Expense (
       id TEXT PRIMARY KEY,
-      userId TEXT NOT NULL,
-      category TEXT NOT NULL,
-      amount REAL NOT NULL,
-      description TEXT NOT NULL,
-      receipt TEXT,
-      status TEXT NOT NULL DEFAULT 'Pending',
       date TEXT NOT NULL,
+      amount REAL NOT NULL,
+      paidTo TEXT NOT NULL,
+      category TEXT NOT NULL,
+      description TEXT NOT NULL,
+      paymentProof TEXT,
+      invoice TEXT,
+      remarks TEXT,
+      status TEXT NOT NULL DEFAULT 'Pending approval',
       createdAt TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      updatedAt TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      userId TEXT NOT NULL,
       FOREIGN KEY (userId) REFERENCES User(id)
     )`
     
     await prisma.$executeRaw`CREATE TABLE IF NOT EXISTS Leave (
       id TEXT PRIMARY KEY,
-      userId TEXT NOT NULL,
+      date TEXT NOT NULL,
       type TEXT NOT NULL,
-      startDate TEXT NOT NULL,
-      endDate TEXT NOT NULL,
-      reason TEXT NOT NULL,
+      reason TEXT,
       status TEXT NOT NULL DEFAULT 'Pending',
       createdAt TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      updatedAt TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      userId TEXT NOT NULL,
       FOREIGN KEY (userId) REFERENCES User(id)
     )`
     
     await prisma.$executeRaw`CREATE TABLE IF NOT EXISTS Holiday (
       id TEXT PRIMARY KEY,
+      date TEXT NOT NULL UNIQUE,
       name TEXT NOT NULL,
-      date TEXT NOT NULL,
       createdAt TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
     )`
     
