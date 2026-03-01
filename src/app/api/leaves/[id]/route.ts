@@ -4,8 +4,9 @@ import { prisma } from '@/lib/prisma'
 
 export async function PUT(
   request: Request,
-  { params }: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
+  const params = await context.params
   try {
     const cookieStore = await cookies()
     const userId = cookieStore.get('userId')?.value
