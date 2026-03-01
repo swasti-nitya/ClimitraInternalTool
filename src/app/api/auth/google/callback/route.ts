@@ -6,8 +6,11 @@ export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams
   const code = searchParams.get('code')
   
+  // Use production URL or request URL for redirects
+  const baseUrl = process.env.NEXTAUTH_URL || request.url
+  
   if (!code) {
-    return NextResponse.redirect(new URL('/?error=no_code', request.url))
+    return NextResponse.redirect(new URL('/?error=no_code', baseUrl))
   }
 
   try {
@@ -43,7 +46,7 @@ export async function GET(request: NextRequest) {
 
     // Check if email is @climitra.com
     if (!googleUser.email.endsWith('@climitra.com')) {
-      return NextResponse.redirect(new URL('/?error=invalid_domain', request.url))
+      return NextResponse.redirect(new URL('/?error=invalid_domain', baseUrl))
     }
 
     // Find user in database by email
@@ -52,11 +55,11 @@ export async function GET(request: NextRequest) {
     })
 
     if (!user) {
-      return NextResponse.redirect(new URL('/?error=user_not_found', request.url))
+      return NextResponse.redirect(new URL('/?error=user_not_found', baseUrl))
     }
 
     // Create response and set cookies
-    const response = NextResponse.redirect(new URL('/dashboard', request.url))
+    const response = NextResponse.redirect(new URL('/dashboard', baseUrl))
     response.cookies.set('userId', user.id, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
@@ -88,6 +91,6 @@ export async function GET(request: NextRequest) {
     return response
   } catch (error) {
     console.error('Google OAuth error:', error)
-    return NextResponse.redirect(new URL('/?error=auth_failed', request.url))
+    return NextResponse.redirect(new URL('/?error=auth_failed', baseUrl))
   }
 }
