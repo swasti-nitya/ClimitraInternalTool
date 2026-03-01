@@ -19,11 +19,15 @@ const users = [
 
 export async function GET() {
   try {
-    // Try to create tables using raw SQL
+    // Check if User table exists, if not create all tables
+    let tableExists = false
     try {
-      // Create User table
+      await prisma.user.count()
+      tableExists = true
+    } catch {
+      // Tables don't exist, create them
       await prisma.$executeRawUnsafe(`
-        CREATE TABLE IF NOT EXISTS User (
+        CREATE TABLE User (
           id TEXT PRIMARY KEY NOT NULL,
           name TEXT NOT NULL,
           email TEXT NOT NULL UNIQUE,
@@ -32,9 +36,8 @@ export async function GET() {
         )
       `)
       
-      // Create Expense table
       await prisma.$executeRawUnsafe(`
-        CREATE TABLE IF NOT EXISTS Expense (
+        CREATE TABLE Expense (
           id TEXT PRIMARY KEY NOT NULL,
           date DATETIME NOT NULL,
           amount REAL NOT NULL,
@@ -52,9 +55,8 @@ export async function GET() {
         )
       `)
       
-      // Create Leave table
       await prisma.$executeRawUnsafe(`
-        CREATE TABLE IF NOT EXISTS Leave (
+        CREATE TABLE Leave (
           id TEXT PRIMARY KEY NOT NULL,
           date DATETIME NOT NULL,
           type TEXT NOT NULL,
@@ -67,20 +69,17 @@ export async function GET() {
         )
       `)
       
-      // Create Holiday table
       await prisma.$executeRawUnsafe(`
-        CREATE TABLE IF NOT EXISTS Holiday (
+        CREATE TABLE Holiday (
           id TEXT PRIMARY KEY NOT NULL,
           date DATETIME NOT NULL UNIQUE,
           name TEXT NOT NULL,
           createdAt DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
         )
       `)
-    } catch (tableError) {
-      console.log('Tables created or already exist')
     }
     
-    // Check if database is already seeded
+    // Now check user count
     const userCount = await prisma.user.count()
     
     if (userCount === 0) {
