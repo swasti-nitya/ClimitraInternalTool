@@ -19,66 +19,73 @@ const users = [
 
 export async function GET() {
   try {
-    // Drop existing tables if they exist
-    await prisma.$executeRaw`DROP TABLE IF EXISTS Leave`
-    await prisma.$executeRaw`DROP TABLE IF EXISTS Expense`
-    await prisma.$executeRaw`DROP TABLE IF EXISTS Holiday`
-    await prisma.$executeRaw`DROP TABLE IF EXISTS User`
+    // Check if database is already seeded
+    const userCount = await prisma.user.count().catch(() => 0)
     
-    // Create tables with correct schema
-    await prisma.$executeRaw`CREATE TABLE User (
-      id TEXT PRIMARY KEY,
-      name TEXT NOT NULL,
-      email TEXT NOT NULL UNIQUE,
-      role TEXT NOT NULL,
-      createdAt TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
-    )`
-    
-    await prisma.$executeRaw`CREATE TABLE Expense (
-      id TEXT PRIMARY KEY,
-      date TEXT NOT NULL,
-      amount REAL NOT NULL,
-      paidTo TEXT NOT NULL,
-      category TEXT NOT NULL,
-      description TEXT NOT NULL,
-      paymentProof TEXT,
-      invoice TEXT,
-      remarks TEXT,
-      status TEXT NOT NULL DEFAULT 'Pending approval',
-      createdAt TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
-      updatedAt TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
-      userId TEXT NOT NULL,
-      FOREIGN KEY (userId) REFERENCES User(id)
-    )`
-    
-    await prisma.$executeRaw`CREATE TABLE Leave (
-      id TEXT PRIMARY KEY,
-      date TEXT NOT NULL,
-      type TEXT NOT NULL,
-      reason TEXT,
-      status TEXT NOT NULL DEFAULT 'Pending',
-      createdAt TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
-      updatedAt TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
-      userId TEXT NOT NULL,
-      FOREIGN KEY (userId) REFERENCES User(id)
-    )`
-    
-    await prisma.$executeRaw`CREATE TABLE Holiday (
-      id TEXT PRIMARY KEY,
-      date TEXT NOT NULL UNIQUE,
-      name TEXT NOT NULL,
-      createdAt TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
-    )`
-    
-    // Now seed users
-    for (const user of users) {
-      await prisma.user.upsert({
-        where: { email: user.email },
-        update: {},
-        create: user,
-      })
+    // Only drop and recreate if tables don't exist or are empty
+    if (userCount === 0) {
+      // Drop existing tables if they exist
+      await prisma.$executeRaw`DROP TABLE IF EXISTS Leave`
+      await prisma.$executeRaw`DROP TABLE IF EXISTS Expense`
+      await prisma.$executeRaw`DROP TABLE IF EXISTS Holiday`
+      await prisma.$executeRaw`DROP TABLE IF EXISTS User`
+      
+      // Create tables with correct schema
+      await prisma.$executeRaw`CREATE TABLE User (
+        id TEXT PRIMARY KEY,
+        name TEXT NOT NULL,
+        email TEXT NOT NULL UNIQUE,
+        role TEXT NOT NULL,
+        createdAt TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+      )`
+      
+      await prisma.$executeRaw`CREATE TABLE Expense (
+        id TEXT PRIMARY KEY,
+        date TEXT NOT NULL,
+        amount REAL NOT NULL,
+        paidTo TEXT NOT NULL,
+        category TEXT NOT NULL,
+        description TEXT NOT NULL,
+        paymentProof TEXT,
+        invoice TEXT,
+        remarks TEXT,
+        status TEXT NOT NULL DEFAULT 'Pending approval',
+        createdAt TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        updatedAt TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        userId TEXT NOT NULL,
+        FOREIGN KEY (userId) REFERENCES User(id)
+      )`
+      
+      await prisma.$executeRaw`CREATE TABLE Leave (
+        id TEXT PRIMARY KEY,
+        date TEXT NOT NULL,
+        type TEXT NOT NULL,
+        reason TEXT,
+        status TEXT NOT NULL DEFAULT 'Pending',
+        createdAt TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        updatedAt TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        userId TEXT NOT NULL,
+        FOREIGN KEY (userId) REFERENCES User(id)
+      )`
+      
+      await prisma.$executeRaw`CREATE TABLE Holiday (
+        id TEXT PRIMARY KEY,
+        date TEXT NOT NULL UNIQUE,
+        name TEXT NOT NULL,
+        createdAt TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+      )`
+      
+      // Seed users
+      for (const user of users) {
+        await prisma.user.create({
+          data: user,
+        })
+      }
+      
+      return NextResponse.json({ success: true, message: 'Database seeded successfully with 13 users' })
+    } else {
+      return NextResponse.json({ success: true, message: `Database already seeded with ${userCount} users` })
     }
-    return NextResponse.json({ success: true, message: 'Database seeded successfully' })
   } catch (error) {
     console.error('Seeding error:', error)
     return NextResponse.json({ error: 'Seeding failed', details: String(error) }, { status: 500 })
