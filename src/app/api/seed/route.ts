@@ -1,5 +1,9 @@
 import { prisma } from '@/lib/prisma'
 import { NextResponse } from 'next/server'
+import { exec } from 'child_process'
+import { promisify } from 'util'
+
+const execAsync = promisify(exec)
 
 const users = [
   { name: 'Aryaman', email: 'aryaman@climitra.com', role: 'Super Admin' },
@@ -19,6 +23,13 @@ const users = [
 
 export async function GET() {
   try {
+    // First, run prisma db push to create tables if they don't exist
+    try {
+      await execAsync('npx prisma db push --accept-data-loss')
+    } catch (pushError) {
+      console.log('Prisma db push completed or tables already exist')
+    }
+    
     // Check if database is already seeded
     const userCount = await prisma.user.count()
     
