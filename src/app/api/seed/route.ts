@@ -1,9 +1,5 @@
 import { prisma } from '@/lib/prisma'
 import { NextResponse } from 'next/server'
-import { exec } from 'child_process'
-import { promisify } from 'util'
-
-const execAsync = promisify(exec)
 
 const users = [
   { name: 'Aryaman', email: 'aryaman@climitra.com', role: 'Super Admin' },
@@ -23,11 +19,65 @@ const users = [
 
 export async function GET() {
   try {
-    // First, run prisma db push to create tables if they don't exist
+    // Try to create tables using raw SQL
     try {
-      await execAsync('npx prisma db push --accept-data-loss')
-    } catch (pushError) {
-      console.log('Prisma db push completed or tables already exist')
+      // Create User table
+      await prisma.$executeRawUnsafe(`
+        CREATE TABLE IF NOT EXISTS User (
+          id TEXT PRIMARY KEY NOT NULL,
+          name TEXT NOT NULL,
+          email TEXT NOT NULL UNIQUE,
+          role TEXT NOT NULL,
+          createdAt DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+        )
+      `)
+      
+      // Create Expense table
+      await prisma.$executeRawUnsafe(`
+        CREATE TABLE IF NOT EXISTS Expense (
+          id TEXT PRIMARY KEY NOT NULL,
+          date DATETIME NOT NULL,
+          amount REAL NOT NULL,
+          paidTo TEXT NOT NULL,
+          category TEXT NOT NULL,
+          description TEXT NOT NULL,
+          paymentProof TEXT,
+          invoice TEXT,
+          remarks TEXT,
+          status TEXT NOT NULL DEFAULT 'Pending approval',
+          createdAt DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+          updatedAt DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+          userId TEXT NOT NULL,
+          FOREIGN KEY (userId) REFERENCES User(id)
+        )
+      `)
+      
+      // Create Leave table
+      await prisma.$executeRawUnsafe(`
+        CREATE TABLE IF NOT EXISTS Leave (
+          id TEXT PRIMARY KEY NOT NULL,
+          date DATETIME NOT NULL,
+          type TEXT NOT NULL,
+          reason TEXT,
+          status TEXT NOT NULL DEFAULT 'Pending',
+          createdAt DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+          updatedAt DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+          userId TEXT NOT NULL,
+          FOREIGN KEY (userId) REFERENCES User(id)
+        )
+      `)
+      
+      // Create Holiday table
+      await prisma.$executeRawUnsafe(`
+        CREATE TABLE IF NOT EXISTS Holiday (
+          id TEXT PRIMARY KEY NOT NULL,
+          date DATETIME NOT NULL UNIQUE,
+          name TEXT NOT NULL,
+          createdAt DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+        )
+      `)
+    } catch (tableError) {
+      console.log('Tables created or already exist')
     }
     
     // Check if database is already seeded
