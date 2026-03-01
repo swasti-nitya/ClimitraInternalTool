@@ -19,8 +19,14 @@ const users = [
 
 export async function GET() {
   try {
-    // First, ensure tables exist by trying to create them
-    await prisma.$executeRaw`CREATE TABLE IF NOT EXISTS User (
+    // Drop existing tables if they exist
+    await prisma.$executeRaw`DROP TABLE IF EXISTS Leave`
+    await prisma.$executeRaw`DROP TABLE IF EXISTS Expense`
+    await prisma.$executeRaw`DROP TABLE IF EXISTS Holiday`
+    await prisma.$executeRaw`DROP TABLE IF EXISTS User`
+    
+    // Create tables with correct schema
+    await prisma.$executeRaw`CREATE TABLE User (
       id TEXT PRIMARY KEY,
       name TEXT NOT NULL,
       email TEXT NOT NULL UNIQUE,
@@ -28,7 +34,7 @@ export async function GET() {
       createdAt TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
     )`
     
-    await prisma.$executeRaw`CREATE TABLE IF NOT EXISTS Expense (
+    await prisma.$executeRaw`CREATE TABLE Expense (
       id TEXT PRIMARY KEY,
       date TEXT NOT NULL,
       amount REAL NOT NULL,
@@ -45,7 +51,7 @@ export async function GET() {
       FOREIGN KEY (userId) REFERENCES User(id)
     )`
     
-    await prisma.$executeRaw`CREATE TABLE IF NOT EXISTS Leave (
+    await prisma.$executeRaw`CREATE TABLE Leave (
       id TEXT PRIMARY KEY,
       date TEXT NOT NULL,
       type TEXT NOT NULL,
@@ -57,7 +63,7 @@ export async function GET() {
       FOREIGN KEY (userId) REFERENCES User(id)
     )`
     
-    await prisma.$executeRaw`CREATE TABLE IF NOT EXISTS Holiday (
+    await prisma.$executeRaw`CREATE TABLE Holiday (
       id TEXT PRIMARY KEY,
       date TEXT NOT NULL UNIQUE,
       name TEXT NOT NULL,
@@ -75,6 +81,6 @@ export async function GET() {
     return NextResponse.json({ success: true, message: 'Database seeded successfully' })
   } catch (error) {
     console.error('Seeding error:', error)
-    return NextResponse.json({ error: 'Seeding failed' }, { status: 500 })
+    return NextResponse.json({ error: 'Seeding failed', details: String(error) }, { status: 500 })
   }
 }
