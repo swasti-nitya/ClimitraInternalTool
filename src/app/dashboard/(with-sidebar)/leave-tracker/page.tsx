@@ -507,7 +507,7 @@ export default function LeaveTracker() {
                 <>
                   <div className="mb-6">
                     <p className="text-sm text-gray-600 mb-2">
-                      <span className="font-semibold">{allUsers.find(u => u.id === filterUserId)?.name}</span>'s Leave Statistics
+                      <span className="font-semibold">{allUsers.find(u => u.id === filterUserId)?.name}</span>&apos;s Leave Statistics
                     </p>
                   </div>
                   

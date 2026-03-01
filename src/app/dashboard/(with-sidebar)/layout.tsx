@@ -25,6 +25,7 @@ export default function DashboardLayout({
       .then(res => res.json())
       .then(data => setUser(data))
       .catch(() => router.push('/'))
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pathname])
 
   const handleLogout = () => {

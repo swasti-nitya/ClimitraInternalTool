@@ -26,6 +26,7 @@ export default function ExpensesPage() {
   useEffect(() => {
     fetchUser()
     fetchExpenses()
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filterUserId])
 
   const fetchUser = async () => {
